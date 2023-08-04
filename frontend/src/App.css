@@ -147,3 +147,63 @@ hr {
 .fR {
   float: right;
 }
+
+.accSubscription {
+  width: 40%;
+  background-color: rgba(255,255,255,0.9);
+  border-radius: 10px;
+  padding: 0px 25px 0px 25px !important;
+}
+
+.planActive {
+  background-color: rgba(31, 77, 145, 0.5);
+  color: rgb(31, 77, 145);
+  font-weight: bold;
+  width: 55%;
+  padding: 5px 0px 5px 0px;
+  border-radius: 5px;
+}
+
+.planCancelled {
+  background-color: rgba(145, 31, 61, 0.5);
+  color: rgb(145, 31, 31);
+  font-weight: bold;
+  width: 75%;
+  padding: 5px 10px 5px 10px;
+  border-radius: 5px;
+}
+
+.currentPlan {
+  font-size: 25px;
+}
+
+.planName {
+  font-size: 15px;
+}
+
+.devices {
+  font-size: 13px;
+}
+
+.currentFee {
+  font-size: 30px;
+}
+
+.changePlanButton {
+  width: 25%;
+  background-color: white;
+  color: rgb(31, 77, 145);
+  padding: 2px 0px 2px 0px;
+  border-radius: 5px;
+  font-weight: bold;
+  border-color: rgb(31, 77, 145) !important;
+}
+
+.cancelPlanButton {
+  text-decoration: none;
+  border: none;
+  background-color: rgba(255,255,255,0);
+  color: rgb(31, 77, 145);
+  font-weight: bold;
+  float: right;
+}
