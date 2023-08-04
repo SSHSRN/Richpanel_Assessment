@@ -1,6 +1,6 @@
 .App {
   min-height: 100vh;
-  background-color: rgb(30,77,144);
+  background-color: rgb(30, 77, 144);
   font-family: 'Roboto', sans-serif;
   display: flex;
   flex-direction: column;
@@ -21,8 +21,90 @@
 
 .signuploginButton {
   width: 100%;
-  background-color: rgb(31,77,145);
+  background-color: rgb(31, 77, 145);
   color: white;
   padding: 10px 0px 10px 0px;
   border-radius: 5px;
+}
+
+.billingPage {
+  min-height: 100vh;
+  width: 100%;
+  background-color: white;
+}
+
+.bold {
+  font-weight: bold;
+}
+
+.subType {
+  display: flex;
+  background-color: rgb(31, 77, 145);
+  color: white;
+  border-radius: 100px;
+  padding: 10px;
+}
+
+.opt1,
+.opt2 {
+  border-radius: 100px;
+  padding: 10px 0px 10px 0px;
+}
+
+.optSelected {
+  background-color: white;
+  color: rgb(31, 77, 145);
+}
+
+.opt1:hover,
+.opt2:hover {
+  cursor: pointer;
+  background-color: rgba(255,255,255,0.8);
+  color: rgb(31, 77, 145);
+}
+
+.Type {
+  background-color: rgba(31, 77, 145, 0.5);
+  color: white;
+  padding: 40px 0px 40px 0px;
+}
+
+.TypeSelected {
+  background-color: rgb(31, 77, 145);
+  color: white;
+}
+
+.Type:hover {
+  cursor: pointer;
+  background-color: rgb(31, 77, 145);
+  color: white;
+}
+
+.protrusion {
+  position: absolute;
+  transform: translate(-50%, -50%) rotate(45deg);
+  width: 20px;
+  height: 20px;
+  background-color: rgb(31, 77, 145);
+}
+
+.center {
+  margin-left: 40%;
+}
+
+hr {
+  margin-left: 3% !important;
+  width: 85%;
+}
+
+.proceedToPaymentButton {
+  width: 40%;
+  background-color: rgb(31, 77, 145);
+  color: white;
+  padding: 10px 0px 10px 0px;
+  border-radius: 5px;
+}
+
+.strong {
+  font-weight: bold;
 }
