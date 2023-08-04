@@ -108,3 +108,42 @@ hr {
 .strong {
   font-weight: bold;
 }
+
+.cardDetails {
+  background-color: rgba(255,255,255,1);
+  padding: 50px 25px 50px 25px !important;
+  border-radius: 10px 0px 0px 10px;
+}
+
+.summary {
+  background-color: rgba(255,255,255,0.9);
+  padding: 50px 25px 50px 25px !important;
+  border-radius: 0px 10px 10px 0px;
+}
+
+.paymentFormControl {
+  border-color: rgba(0,0,0,0) !important;
+  box-shadow: 0 0 5px rgba(0,0,0,0) !important;
+}
+
+.paymentFormControl:focus {
+  border-color: rgba(0,0,0,0) !important;
+  box-shadow: 0 0 5px rgba(0,0,0,0) !important;
+}
+
+.paymentDetailsGroup {
+  border: 2px solid rgba(0,0,0,0.2);
+  border-radius: 5px;
+}
+
+.confirmPaymentButton {
+  width: 40%;
+  background-color: rgb(31, 77, 145);
+  color: white;
+  padding: 10px 0px 10px 0px;
+  border-radius: 5px;
+}
+
+.fR {
+  float: right;
+}

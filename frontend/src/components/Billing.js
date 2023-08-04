@@ -19,7 +19,6 @@ const Billing = () => {
         }
     }
 
-
     const handleSelectPlan = (planType) => {
         setSelectedPlan(planType);
     };
