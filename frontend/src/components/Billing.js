@@ -55,10 +55,10 @@ const Billing = () => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", priceDetails[selectedSub][selectedPlan]);
         api.post('/create_payment_intent', {
             amount: priceDetails[selectedSub][selectedPlan]
-        }).then((res) => {
+        }).then(async(res) => {
             console.log(res.data);
             if (res.data.message === 'Payment intent created successfully') {
-                navigate('/payment');
+                navigate('/payment', { state: { client_secret: res.data.client_secret } });
             }
         }).catch((err) => {
             console.log(err);

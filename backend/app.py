@@ -130,7 +130,15 @@ def create_payment_intent():
             intent = stripe.PaymentIntent.create(
                 amount=request.json['amount'],
                 currency='inr',
+                payment_method_types=['card'],
             )
+            # Save the client_secret and id in the database
+            cluster.update_one({"email": session['user_email']}, {"$set": {"payment_intent_id": intent['id']}})
+            cluster.update_one({"email": session['user_email']}, {"$set": {"payment_intent_client_secret": intent['client_secret']}})
+
+            # Save the client_secret and id in the session as well da
+            session['payment_intent_id'] = intent['id']
+            session['payment_intent_client_secret'] = intent['client_secret']
             return jsonify({"status": "success", "message": "Payment intent created successfully", "client_secret": intent['client_secret']}), 200
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
@@ -173,6 +181,57 @@ def check_card():
                 return jsonify({'valid': False, 'message': 'An error occurred while validating the card details.'}), 200
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
+
+@app.route('/create_subscription', methods=['POST'])
+def create_subscription():
+    try:
+        data = request.get_json()
+        print(data)
+        # Check if user is already subscribed
+        client = pymongo.MongoClient(mongoConnectionString)
+        database = client["Cluster0"]
+        cluster = database["users"]
+
+        # get user name from database
+        name = cluster.find_one({"email": session['user_email']})['name']
+        print("name from database: " + name)
+
+        # Check if the customer already exists in Stripe
+        stripe_customer = stripe.Customer.list(email=session['user_email'], limit=1)
+        if stripe_customer.data:
+            # If the customer already exists, retrieve the first customer in the list
+            customer_id = stripe_customer.data[0].id
+            print("customer already exists in stripe as: " + customer_id)
+        else:
+            # If the customer does not exist, create a new customer in Stripe
+            print("customer does not exist in stripe")
+            customer = stripe.Customer.create(
+                email=session['user_email'],
+                name=name,
+                payment_method=data['payment_method'], # payment_method is the PaymentMethod ID from the client
+                invoice_settings={
+                    'default_payment_method': data['payment_method']
+                }
+            )
+
+        # Create the subscription
+        subscription = stripe.Subscription.create(
+            customer=customer_id,
+            items=[{
+                "price": "price_1NbkwSSCT3zDBivM0Q4DXeF6",
+            }],
+            payment_settings={
+                'payment_method_types': ['card'],
+                'save_default_payment_method': 'on_subscription',
+            },
+            expand=['latest_invoice.payment_intent']
+        )
+        print("subscription created", subscription)
+        return jsonify({'status': 'success', 'message': 'Subscription successful', 'client_secret': subscription.latest_invoice.payment_intent.client_secret}), 200
+    except Exception as e:
+        print("error", e)
+        return jsonify({'status': 'error', 'message': str(e)}), 200
+
 
 # Run Server on port 5000
 if __name__ == '__main__':

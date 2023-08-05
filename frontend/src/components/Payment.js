@@ -1,31 +1,47 @@
-import React from 'react'
+import React, { useState } from 'react'
 import axios from 'axios'
+import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { useLocation } from 'react-router-dom';
 
 const Payment = () => {
+    const location = useLocation();
+    const { client_secret } = location.state;
+    const stripe = useStripe();
+    const elements = useElements();
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
     const api = axios.create({
         baseURL: 'http://localhost:5000',
         withCredentials: true
     })
-    const checkCard = async() => {
-        await api.post('/check_card', {
-            card_number: document.getElementsByClassName('paymentFormControl')[0].value,
-            expiry_month: document.getElementsByClassName('paymentFormControl')[1].value.split('/')[0],
-            expiry_year: document.getElementsByClassName('paymentFormControl')[1].value.split('/')[1],
-            cvc: document.getElementsByClassName('paymentFormControl')[2].value
-        }).then((res) => {
-            console.log(res.data);
-            if (!res.data.valid) {
-                alert(res.data.message);
-            }
-            else {
-                alert('Card Validated');
-                if (window.confirm('Are you sure you want to pay?')) {
-                    alert('Ok da, ham paisa lenge');
+    const checkCard = async () => {
+        if (window.confirm('Are you sure you want to pay?')) {
+            setLoading(true);
+            try {
+                const paymentMethod = await stripe.createPaymentMethod({
+                    card: elements.getElement("card"),
+                    type: "card",
+                });
+
+                console.log("paymentMethod:", paymentMethod.paymentMethod.id);
+
+                const response = await api.post('/create_subscription', {
+                    payment_method: paymentMethod ? paymentMethod.paymentMethod.id : null,
+                });
+                if (!response.data) {
+                    setError('Payment Failed')
+                    setLoading(false);
+                    return;
                 }
+                const data = await response.json();
+                const confirm = await stripe.confirmCardPayment(data.clientSecret);
+                if (confirm.error) return alert("Payment unsuccessful!");
+                alert("Payment successful!");
+            } catch (err) {
+                setError(err.message);
+                setLoading(false);
             }
-        }).catch((err) => {
-            console.log(err);
-        })
+        }
     }
     return (
         <div className='paymentPage col-md-7 col-sm-8 col-10'>
@@ -34,18 +50,10 @@ const Payment = () => {
                     <div className='container'>
                         <h2 className='strong'>Complete Payment</h2>
                         <h6 className='mt-2'>Enter your credit or debit card details below</h6>
-                        <div className='input-group mt-3 mb-3 paymentDetailsGroup'>
-                            <div className='col-sm-7'>
-                                <input type='text' className='paymentFormControl form-control noBorder' placeholder='Card Number' />
-                            </div>
-                            <div className='col-sm-3'>
-                                <input type='text' className='paymentFormControl form-control noBorder' placeholder='MM/YY' />
-                            </div>
-                            <div className='col-sm-2'>
-                                <input type='text' className='paymentFormControl form-control noBorder' placeholder='CVC' />
-                            </div>
-                        </div>
-                        <button className='confirmPaymentButton mt-3' onClick={checkCard}>Confirm Payment</button>
+                        <CardElement className='paymentDetailsGroup mt-3 mb-3' />
+                        <button className='confirmPaymentButton mt-3' onClick={checkCard} disabled={!stripe || loading}>
+                            {loading ? 'Processing...' : 'Confirm Payment'}
+                        </button>
                     </div>
                 </div>
                 <div className="col-5 summary">

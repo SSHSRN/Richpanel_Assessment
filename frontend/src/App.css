@@ -134,6 +134,7 @@ hr {
 .paymentDetailsGroup {
   border: 2px solid rgba(0,0,0,0.2);
   border-radius: 5px;
+  padding: 10px 10px 10px 10px;
 }
 
 .confirmPaymentButton {
