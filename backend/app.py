@@ -19,7 +19,7 @@ mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=10)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=1000)
 # app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 
@@ -135,6 +135,44 @@ def create_payment_intent():
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
 
+@app.route('/check_card', methods=['POST'])
+def check_card():
+    client = pymongo.MongoClient(mongoConnectionString)
+    database = client["Cluster0"]
+    cluster = database["users"]
+    # check if user exists
+    if cluster.find_one({"email": session['user_email']}):
+        # check if user is subscribed
+        if cluster.find_one({"email": session['user_email']})['subscribed'] == True:
+            return jsonify({"status": "error", "message": "User is already subscribed"}), 200
+        else:
+            # check card
+            try:
+                card_number = request.json['card_number']
+                exp_month = request.json['expiry_month']
+                exp_year = request.json['expiry_year']
+                cvc = request.json['cvc']
+
+                # Attempt to create a Payment Method with the provided card details
+                payment_method = stripe.PaymentMethod.create(
+                    type='card',
+                    card={
+                        'number': card_number,
+                        'exp_month': exp_month,
+                        'exp_year': exp_year,
+                        'cvc': cvc,
+                    },
+                )
+
+                # If the Payment Method is successfully created, the card details are valid
+                return jsonify({'valid': True})
+            except stripe.error.CardError as e:
+                # If there's a CardError, the card details are invalid
+                return jsonify({'valid': False, 'message': e.user_message}), 200
+            except Exception as e:
+                return jsonify({'valid': False, 'message': 'An error occurred while validating the card details.'}), 200
+    else:
+        return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
 
 # Run Server on port 5000
 if __name__ == '__main__':

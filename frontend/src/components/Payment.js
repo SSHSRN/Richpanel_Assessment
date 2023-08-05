@@ -1,6 +1,32 @@
 import React from 'react'
+import axios from 'axios'
 
 const Payment = () => {
+    const api = axios.create({
+        baseURL: 'http://localhost:5000',
+        withCredentials: true
+    })
+    const checkCard = async() => {
+        await api.post('/check_card', {
+            card_number: document.getElementsByClassName('paymentFormControl')[0].value,
+            expiry_month: document.getElementsByClassName('paymentFormControl')[1].value.split('/')[0],
+            expiry_year: document.getElementsByClassName('paymentFormControl')[1].value.split('/')[1],
+            cvc: document.getElementsByClassName('paymentFormControl')[2].value
+        }).then((res) => {
+            console.log(res.data);
+            if (!res.data.valid) {
+                alert(res.data.message);
+            }
+            else {
+                alert('Card Validated');
+                if (window.confirm('Are you sure you want to pay?')) {
+                    alert('Ok da, ham paisa lenge');
+                }
+            }
+        }).catch((err) => {
+            console.log(err);
+        })
+    }
     return (
         <div className='paymentPage col-md-7 col-sm-8 col-10'>
             <div className="row">
@@ -19,7 +45,7 @@ const Payment = () => {
                                 <input type='text' className='paymentFormControl form-control noBorder' placeholder='CVC' />
                             </div>
                         </div>
-                        <button className='confirmPaymentButton mt-3'>Confirm Payment</button>
+                        <button className='confirmPaymentButton mt-3' onClick={checkCard}>Confirm Payment</button>
                     </div>
                 </div>
                 <div className="col-5 summary">
