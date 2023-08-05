@@ -51,8 +51,18 @@ const Billing = () => {
         setSelectedSub(subType);
     };
 
-    const printSelection = () => {
+    const proceedToPayment = () => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", priceDetails[selectedSub][selectedPlan]);
+        api.post('/create_payment_intent', {
+            amount: priceDetails[selectedSub][selectedPlan]
+        }).then((res) => {
+            console.log(res.data);
+            if (res.data.message === 'Payment intent created successfully') {
+                navigate('/payment');
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
     };
 
     if (loading) {
@@ -230,7 +240,7 @@ const Billing = () => {
                 </div>
                 <hr />
                 <div className='d-flex justify-content-center'>
-                    <button className='mt-5 proceedToPaymentButton text-center' onClick={() => printSelection()}>Next</button>
+                    <button className='mt-5 proceedToPaymentButton text-center' onClick={() => proceedToPayment()}>Next</button>
                 </div>
             </div>
         </div>

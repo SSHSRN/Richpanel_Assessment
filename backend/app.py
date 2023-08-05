@@ -7,8 +7,12 @@ import time
 import requests
 import hashlib
 from datetime import timedelta
+import stripe
 
 load_dotenv()
+
+stripe.api_key = os.getenv("STRIPE_SECRET_KEY")
+print(stripe.api_key)
 
 mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 # print(mongoConnectionString)
@@ -108,6 +112,26 @@ def get_user():
         # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
         user.pop('_id')
         return jsonify({"status": "success", "message": "User found and logged in", "user": user}), 200
+    else:
+        return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
+
+@app.route('/create_payment_intent', methods=['POST'])
+def create_payment_intent():
+    client = pymongo.MongoClient(mongoConnectionString)
+    database = client["Cluster0"]
+    cluster = database["users"]
+    # check if user exists
+    if cluster.find_one({"email": session['user_email']}):
+        # check if user is subscribed
+        if cluster.find_one({"email": session['user_email']})['subscribed'] == True:
+            return jsonify({"status": "error", "message": "User is already subscribed"}), 200
+        else:
+            # create payment intent
+            intent = stripe.PaymentIntent.create(
+                amount=request.json['amount'],
+                currency='inr',
+            )
+            return jsonify({"status": "success", "message": "Payment intent created successfully", "client_secret": intent['client_secret']}), 200
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
 
