@@ -1,6 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 const Billing = () => {
+    const navigate = useNavigate();
+    const api = axios.create({
+        baseURL: 'http://localhost:5000',
+        withCredentials: true
+    });
+
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        console.log('Billing page loaded');
+        api.get('/get_user').then((res) => {
+            console.log(res.data.message);
+            if (res.data.message === 'User not found or not logged in') {
+                setLoading(false);
+                alert('You are not logged in. Please login to continue');
+                navigate('/login');
+            }
+            setLoading(false);
+        }).catch((err) => {
+            console.log(err);
+        });
+    }, []);
     const [selectedPlan, setSelectedPlan] = useState('mobile');
     const [selectedSub, setSelectedSub] = useState('monthly');
 
@@ -30,6 +54,14 @@ const Billing = () => {
     const printSelection = () => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", priceDetails[selectedSub][selectedPlan]);
     };
+
+    if (loading) {
+        return (
+            <div className='loading'>
+                <h1 className='text-white'>Loading...</h1>
+            </div>
+        )
+    }
 
     return (
         <div className='billingPage'>
