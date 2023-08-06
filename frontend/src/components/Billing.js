@@ -25,7 +25,7 @@ const Billing = () => {
             console.log(err);
         });
 
-        api.get('/get_plans').then(async(res) => {
+        api.get('/get_plans').then(async (res) => {
             console.log(res.data);
             await setData(res.data.plans);
             setLoading(false);
@@ -190,22 +190,24 @@ const Billing = () => {
                     </div>
                     <div className='col-2 offset-md-1'>
                         <div className='col-10'>
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>{data && data[0]['Resolution']}</h6>) || <h6 className='text-center mb-0'>480p</h6>}
+                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>{data && data[0]['Resolution']}</h6>) || <h6 className='text-center mb-0'>{data && data[0]['Resolution']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>{data && data[1]['Resolution']}</h6>) || <h6 className='text-center mb-0'>480p</h6>}
+                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>{data && data[1]['Resolution']}</h6>) || <h6 className='text-center mb-0'>{data && data[1]['Resolution']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>{data && data[2]['Resolution']}</h6>) || <h6 className='text-center mb-0'>1080p</h6>}
+                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>{data && data[2]['Resolution']}</h6>) || <h6 className='text-center mb-0'>{data && data[2]['Resolution']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>4K+HDR</h6>) || <h6 className='text-center mb-0'>4K+HDR</h6>}
+                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>{
+                                data && data[3]['Resolution']
+                            }</h6>) || <h6 className='text-center mb-0'>{data && data[3]['Resolution']}</h6>}
                         </div>
                     </div>
                 </div>
@@ -217,32 +219,70 @@ const Billing = () => {
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>Phone</h6>) || <h6 className='text-center mb-0'>Phone</h6>}
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mt-3 strong'>Tablet</h6>) || <h6 className='text-center mt-3'>Tablet</h6>}
+                            {
+                                (selectedPlan === 'mobile' && <div> {data && data[0]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0 strong'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3 strong'>{device}</h6>
+                                })}</div>) || <div> {data && data[0]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3'>{device}</h6>
+                                })}</div>
+                            }
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>Phone</h6>) || <h6 className='text-center mb-0'>Phone</h6>}
-                            {(selectedPlan === 'basic' && <h6 className='text-center mt-3 strong'>Tablet</h6>) || <h6 className='text-center mt-3'>Tablet</h6>}
-                            {(selectedPlan === 'basic' && <h6 className='text-center mt-3 strong'>Computer</h6>) || <h6 className='text-center mt-3'>Computer</h6>}
-                            {(selectedPlan === 'basic' && <h6 className='text-center mt-3 strong'>TV</h6>) || <h6 className='text-center mt-3'>TV</h6>}
+                            {
+                                (selectedPlan === 'basic' && <div> {data && data[1]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0 strong'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3 strong'>{device}</h6>
+                                })}</div>) || <div> {data && data[1]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3'>{device}</h6>
+                                })}</div>
+                            }
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>Phone</h6>) || <h6 className='text-center mb-0'>Phone</h6>}
-                            {(selectedPlan === 'standard' && <h6 className='text-center mt-3 strong'>Tablet</h6>) || <h6 className='text-center mt-3'>Tablet</h6>}
-                            {(selectedPlan === 'standard' && <h6 className='text-center mt-3 strong'>Computer</h6>) || <h6 className='text-center mt-3'>Computer</h6>}
-                            {(selectedPlan === 'standard' && <h6 className='text-center mt-3 strong'>TV</h6>) || <h6 className='text-center mt-3'>TV</h6>}
+                            {
+                                (selectedPlan === 'standard' && <div> {data && data[2]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0 strong'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3 strong'>{device}</h6>
+                                })}</div>) || <div> {data && data[2]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3'>{device}</h6>
+                                })}</div>
+                            }
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>Phone</h6>) || <h6 className='text-center mb-0'>Phone</h6>}
-                            {(selectedPlan === 'premium' && <h6 className='text-center mt-3 strong'>Tablet</h6>) || <h6 className='text-center mt-3'>Tablet</h6>}
-                            {(selectedPlan === 'premium' && <h6 className='text-center mt-3 strong'>Computer</h6>) || <h6 className='text-center mt-3'>Computer</h6>}
-                            {(selectedPlan === 'premium' && <h6 className='text-center mt-3 strong'>TV</h6>) || <h6 className='text-center mt-3'>TV</h6>}
+                            {
+                                (selectedPlan === 'premium' && <div> {data && data[3]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0 strong'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3 strong'>{device}</h6>
+                                })}</div>) || <div> {data && data[3]['Device'].split(',').map((device, index) => {
+                                    if (index === 0) {
+                                        return <h6 key={index} className='text-center mb-0'>{device}</h6>
+                                    }
+                                    return <h6 key={index} className='text-center mt-3'>{device}</h6>
+                                })}</div>
+                            }
                         </div>
                     </div>
                 </div>
