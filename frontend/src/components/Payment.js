@@ -33,8 +33,8 @@ const Payment = () => {
                     setLoading(false);
                     return;
                 }
-                const data = await response.json();
-                const confirm = await stripe.confirmCardPayment(data.clientSecret);
+                console.log("data:", response.data);
+                const confirm = await stripe.confirmCardPayment(response.data.client_secret); console.log("confirm:", confirm);
                 if (confirm.error) return alert("Payment unsuccessful!");
                 alert("Payment successful!");
             } catch (err) {
@@ -42,6 +42,13 @@ const Payment = () => {
                 setLoading(false);
             }
         }
+    }
+    if (error) {
+        return (
+            <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100vh' }}>
+                <h1 className='text-white'>Error: {error}</h1>
+            </div>
+        )
     }
     return (
         <div className='paymentPage col-md-7 col-sm-8 col-10'>

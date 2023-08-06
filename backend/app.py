@@ -20,7 +20,7 @@ mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=20)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60)
 # app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 
@@ -51,7 +51,7 @@ def signup():
         "recent_activity": [
             {
                 "activity": "Signed up",
-                "expiring_at": time.time() + 20000 # 20 seconds
+                "expiring_at": time.time() + 60 # 60 seconds
             }
         ],
     }
@@ -65,7 +65,7 @@ def signup():
         data.pop('_id')
         if(request.json['remember_user'] == True):
             session.permanent = True
-            app.permanent_session_lifetime = timedelta(seconds=30)
+            app.permanent_session_lifetime = timedelta(seconds=120)
             # app.permanent_session_lifetime = timedelta(minutes=20)
         else:
             session.permanent = False
@@ -85,21 +85,23 @@ def login():
         if cluster.find_one({"email": request.json['email']})['password'] == request.json['password']:
             # check for expired sessions in recent_activity array and remove them
             for i in range(len(cluster.find_one({"email": request.json['email']})['recent_activity'])):
+                print(cluster.find_one({"email": request.json['email']})['recent_activity'][i]['expiring_at'], time.time())
                 if cluster.find_one({"email": request.json['email']})['recent_activity'][i]['expiring_at'] < time.time():
+                    print("Removing expired session")
                     cluster.update_one({"email": request.json['email']}, {"$pull": {"recent_activity": cluster.find_one({"email": request.json['email']})['recent_activity'][i]}})
 
             if len(cluster.find_one({"email": request.json['email']})['recent_activity']) >= cluster.find_one({"email": request.json['email']})['max_allowed_sessions']:            
                 return jsonify({"status": "error", "message": "Maximum number of sessions reached for your account. Please logout from one of the other devices to login from this device"}), 200
             # add the current session to the recent_activity array
             if(request.json['remember_user'] == True):
-                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 30000}}}) # 30 seconds
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 120}}}) # 120 seconds
             else:
-                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 20000}}}) # 20 seconds
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 60}}}) # 60 seconds
             # set session
             print(request.json['remember_user'])
             if(request.json['remember_user'] == True):
                 session.permanent = True
-                app.permanent_session_lifetime = timedelta(seconds=30)
+                app.permanent_session_lifetime = timedelta(seconds=120)
                 # app.permanent_session_lifetime = timedelta(minutes=20)
             session['user_email'] = request.json['email']
             print(session.get('user_email'))
