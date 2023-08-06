@@ -6,7 +6,7 @@ const Billing = () => {
     const [data, setData] = useState({});
     const navigate = useNavigate();
     const api = axios.create({
-        baseURL: 'http://localhost:5000',
+        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
         withCredentials: true
     });
 

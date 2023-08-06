@@ -6,7 +6,7 @@ import { useNavigate } from 'react-router-dom'
 const Login = () => {
     const [loading, setLoading] = useState(false)
     const api = axios.create({
-        baseURL: 'http://localhost:5000',
+        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
         withCredentials: true
     })
     const navigate = useNavigate()

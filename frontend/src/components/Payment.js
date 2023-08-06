@@ -14,7 +14,7 @@ const Payment = () => {
     const [error, setError] = useState('');
     const [db, setDB] = useState(false);
     const api = axios.create({
-        baseURL: 'http://localhost:5000',
+        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
         withCredentials: true
     });
 
