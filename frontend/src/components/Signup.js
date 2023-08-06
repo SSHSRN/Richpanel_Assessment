@@ -27,7 +27,8 @@ const Signup = () => {
                 setLoading(false);
             }
             else {
-                navigate('/billing')
+                alert('User created successfully. Please login to continue');
+                navigate('/login');
             }
         }).catch((err) => {
             console.log(err);

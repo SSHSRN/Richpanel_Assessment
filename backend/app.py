@@ -50,13 +50,7 @@ def signup():
         "subscribed_plan": None,
         "max_allowed_sessions": 1,
         "subscription_devices": [],
-        "recent_activity": [
-            {
-                "activity": "Signed up",
-                # "expiring_at": time.time() + 60 # 60 seconds
-                "expiring_at": time.time() + 600 # 10 minutes
-            }
-        ],
+        "recent_activity": [{}],
     }
     # check if user already exists
     if cluster.find_one({"email": request.json['email']}):
