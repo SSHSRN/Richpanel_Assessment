@@ -208,3 +208,9 @@ hr {
   font-weight: bold;
   float: right;
 }
+
+.homeContainer {
+  background-color: white;
+  padding: 50px 30px 50px 30px;
+  border-radius: 20px;
+}
