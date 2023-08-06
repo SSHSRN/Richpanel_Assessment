@@ -8,6 +8,7 @@ import requests
 import hashlib
 from datetime import timedelta
 import stripe
+import threading
 
 load_dotenv()
 
@@ -19,7 +20,7 @@ mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=1000)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=20)
 # app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 
@@ -32,7 +33,6 @@ def signup():
     client = pymongo.MongoClient(mongoConnectionString)
     database = client["Cluster0"]
     cluster = database["users"]
-    token = hashlib.sha256(f'{request.json["email"]}:{int(time.time())}'.encode()).hexdigest()
     data = {
         "name": request.json['name'],
         "email": request.json['email'],
@@ -47,7 +47,13 @@ def signup():
         "subscribed_plan": None,
         "subscription_type": None,
         "amount_paid": None,
-        "token": token,
+        "max_allowed_sessions": 1,
+        "recent_activity": [
+            {
+                "activity": "Signed up",
+                "expiring_at": time.time() + 20000 # 20 seconds
+            }
+        ],
     }
     # check if user already exists
     if cluster.find_one({"email": request.json['email']}):
@@ -59,7 +65,7 @@ def signup():
         data.pop('_id')
         if(request.json['remember_user'] == True):
             session.permanent = True
-            app.permanent_session_lifetime = timedelta(seconds=20)
+            app.permanent_session_lifetime = timedelta(seconds=30)
             # app.permanent_session_lifetime = timedelta(minutes=20)
         else:
             session.permanent = False
@@ -77,11 +83,23 @@ def login():
     if cluster.find_one({"email": request.json['email']}):
         # check if password is correct
         if cluster.find_one({"email": request.json['email']})['password'] == request.json['password']:
+            # check for expired sessions in recent_activity array and remove them
+            for i in range(len(cluster.find_one({"email": request.json['email']})['recent_activity'])):
+                if cluster.find_one({"email": request.json['email']})['recent_activity'][i]['expiring_at'] < time.time():
+                    cluster.update_one({"email": request.json['email']}, {"$pull": {"recent_activity": cluster.find_one({"email": request.json['email']})['recent_activity'][i]}})
+
+            if len(cluster.find_one({"email": request.json['email']})['recent_activity']) >= cluster.find_one({"email": request.json['email']})['max_allowed_sessions']:            
+                return jsonify({"status": "error", "message": "Maximum number of sessions reached for your account. Please logout from one of the other devices to login from this device"}), 200
+            # add the current session to the recent_activity array
+            if(request.json['remember_user'] == True):
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 30000}}}) # 30 seconds
+            else:
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 20000}}}) # 20 seconds
             # set session
             print(request.json['remember_user'])
             if(request.json['remember_user'] == True):
                 session.permanent = True
-                app.permanent_session_lifetime = timedelta(seconds=20)
+                app.permanent_session_lifetime = timedelta(seconds=30)
                 # app.permanent_session_lifetime = timedelta(minutes=20)
             session['user_email'] = request.json['email']
             print(session.get('user_email'))
@@ -89,11 +107,10 @@ def login():
             cluster.update_one({"email": request.json['email']}, {"$set": {"last_login": time.time()}})
             # update number of logins
             cluster.update_one({"email": request.json['email']}, {"$inc": {"num_of_logins": 1}})
-            # update token
-            cluster.update_one({"email": request.json['email']}, {"$set": {"token": hashlib.sha256(f'{request.json["email"]}:{int(time.time())}'.encode()).hexdigest()}})
             data = cluster.find_one({"email": request.json['email']})
             # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
             data.pop('_id')
+            client.close()
             return jsonify({"status": "success", "message": "User logged in successfully", "user": data}), 200
         else:
             return jsonify({"status": "error", "message": "Incorrect password"}), 200
@@ -232,6 +249,17 @@ def create_subscription():
         print("error", e)
         return jsonify({'status': 'error', 'message': str(e)}), 200
 
+@app.route('/get_plans', methods=['GET'])
+def get_plans():
+    try:
+        client = pymongo.MongoClient(mongoConnectionString)
+        database = client["Cluster0"]
+        cluster = database["plans"]
+        plans = list(cluster.find({}, {'_id': False}))
+        return jsonify({'status': 'success', 'message': 'Plans retrieved successfully', 'plans': plans}), 200
+    except Exception as e:
+        print("error", e)
+        return jsonify({'status': 'error', 'message': str(e)}), 200
 
 # Run Server on port 5000
 if __name__ == '__main__':

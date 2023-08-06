@@ -3,6 +3,7 @@ import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 
 const Billing = () => {
+    const [data, setData] = useState({});
     const navigate = useNavigate();
     const api = axios.create({
         baseURL: 'http://localhost:5000',
@@ -20,6 +21,13 @@ const Billing = () => {
                 alert('You are not logged in. Please login to continue');
                 navigate('/login');
             }
+        }).catch((err) => {
+            console.log(err);
+        });
+
+        api.get('/get_plans').then(async(res) => {
+            console.log(res.data);
+            await setData(res.data.plans);
             setLoading(false);
         }).catch((err) => {
             console.log(err);
@@ -55,7 +63,7 @@ const Billing = () => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", priceDetails[selectedSub][selectedPlan]);
         api.post('/create_payment_intent', {
             amount: priceDetails[selectedSub][selectedPlan]
-        }).then(async(res) => {
+        }).then(async (res) => {
             console.log(res.data);
             if (res.data.message === 'Payment intent created successfully') {
                 navigate('/payment', { state: { client_secret: res.data.client_secret } });
@@ -90,7 +98,7 @@ const Billing = () => {
                     </div>
                     <div className='col-2 offset-md-1'>
                         <div className={`col-10 Type ${selectedPlan === 'mobile' ? 'TypeSelected' : ''}`} onClick={() => handleSelectPlan('mobile')}>
-                            <h5 className='text-center mb-0'>Mobile</h5>
+                            <h5 className='text-center mb-0'>{data && data[0]['planName']}</h5>
                         </div>
                         <div className='center'>
                             {selectedPlan === 'mobile' && <div className='protrusion' />}
@@ -98,7 +106,7 @@ const Billing = () => {
                     </div>
                     <div className='col-2'>
                         <div className={`col-10 Type ${selectedPlan === 'basic' ? 'TypeSelected' : ''}`} onClick={() => handleSelectPlan('basic')}>
-                            <h5 className='text-center mb-0'>Basic</h5>
+                            <h5 className='text-center mb-0'>{data && data[1]['planName']}</h5>
                         </div>
                         <div className='center'>
                             {selectedPlan === 'basic' && <div className='protrusion' />}
@@ -106,7 +114,7 @@ const Billing = () => {
                     </div>
                     <div className='col-2'>
                         <div className={`col-10 Type ${selectedPlan === 'standard' ? 'TypeSelected' : ''}`} onClick={() => handleSelectPlan('standard')}>
-                            <h5 className='text-center mb-0'>Standard</h5>
+                            <h5 className='text-center mb-0'>{data && data[2]['planName']}</h5>
                         </div>
                         <div className='center'>
                             {selectedPlan === 'standard' && <div className='protrusion' />}
@@ -114,7 +122,7 @@ const Billing = () => {
                     </div>
                     <div className='col-2'>
                         <div className={`col-10 Type ${selectedPlan === 'premium' ? 'TypeSelected' : ''}`} onClick={() => handleSelectPlan('premium')}>
-                            <h5 className='text-center mb-0'>Premium</h5>
+                            <h5 className='text-center mb-0'>{data && data[3]['planName']}</h5>
                         </div>
                         <div className='center'>
                             {selectedPlan === 'premium' && <div className='protrusion' />}
@@ -155,22 +163,22 @@ const Billing = () => {
                     </div>
                     <div className='col-2 offset-md-1'>
                         <div className='col-10'>
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>Good</h6>) || <h6 className='text-center mb-0'>Good</h6>}
+                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>{data && data[0]['videoQuality']}</h6>) || <h6 className='text-center mb-0'>{data && data[0]['videoQuality']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>Good</h6>) || <h6 className='text-center mb-0'>Good</h6>}
+                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>{data && data[1]['videoQuality']}</h6>) || <h6 className='text-center mb-0'>{data && data[1]['videoQuality']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>Better</h6>) || <h6 className='text-center mb-0'>Better</h6>}
+                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>{data && data[2]['videoQuality']}</h6>) || <h6 className='text-center mb-0'>{data && data[2]['videoQuality']}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>Best</h6>) || <h6 className='text-center mb-0'>Best</h6>}
+                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>{data && data[3]['videoQuality']}</h6>) || <h6 className='text-center mb-0'>{data && data[3]['videoQuality']}</h6>}
                         </div>
                     </div>
                 </div>
@@ -182,17 +190,17 @@ const Billing = () => {
                     </div>
                     <div className='col-2 offset-md-1'>
                         <div className='col-10'>
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>480p</h6>) || <h6 className='text-center mb-0'>480p</h6>}
+                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>{data && data[0]['Resolution']}</h6>) || <h6 className='text-center mb-0'>480p</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>480p</h6>) || <h6 className='text-center mb-0'>480p</h6>}
+                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>{data && data[1]['Resolution']}</h6>) || <h6 className='text-center mb-0'>480p</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>1080p</h6>) || <h6 className='text-center mb-0'>1080p</h6>}
+                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>{data && data[2]['Resolution']}</h6>) || <h6 className='text-center mb-0'>1080p</h6>}
                         </div>
                     </div>
                     <div className='col-2'>

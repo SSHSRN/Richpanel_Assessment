@@ -20,13 +20,9 @@ const Login = () => {
             remember_user: document.getElementById('rememberMe').checked
         }).then((res) => {
             console.log(res.data);
-            if (res.data.message === 'User does not exist') {
-                alert('A user with this email does not exist')
-                setLoading(false)
-            }
-            else if (res.data.message === 'Incorrect password') {
-                alert('Incorrect password')
-                setLoading(false)
+            if (res.data.status === 'error') {
+                alert(res.data.message)
+                setLoading(false);
             }
             else {
                 navigate('/billing')
