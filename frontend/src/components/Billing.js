@@ -63,13 +63,15 @@ const Billing = () => {
     const proceedToPayment = () => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", data[selectedPlanIndex][term]);
         const priceID = selectedSub === 'monthly' ? data[selectedPlanIndex].monthlyPriceID : data[selectedPlanIndex].yearlyPriceID;
-        navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term] } });
+        const devices = data[selectedPlanIndex].Device;
+        navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term], devices: devices } });
     };
 
     if (loading) {
         return (
             <div className='loading'>
                 <h1 className='text-white'>Loading...</h1>
+                <span className='spinner-border spinner-border-lg text-white'></span>
             </div>
         )
     }

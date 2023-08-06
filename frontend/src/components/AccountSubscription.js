@@ -1,8 +1,36 @@
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import { Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios'
 
 const AccountSubscription = () => {
-    const [planCancelled, setPlanCancelled] = React.useState(false)
+    const [planCancelled, setPlanCancelled] = useState(false);
+    const [pageLoading, setPageLoading] = useState(true);
+    const [user, setUser] = useState({});
+    const api = axios.create({
+        baseURL: 'http://localhost:5000',
+        withCredentials: true
+    });
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        api.get('/get_user').then((res) => {
+            console.log(res.data.message);
+            console.log(res.data);
+            if (res.data.message === 'User not found or not logged in') {
+                setPageLoading(false);
+                alert('You are not logged in. Please login to continue');
+                navigate('/login');
+            }
+            setUser(res.data.user);
+            setPageLoading(false);
+        }).catch((err) => {
+            console.log(err);
+        });
+    }, []);
+
+    const handlePlanChange = () => {
+    }
 
     const handleCancel = () => {
         setPlanCancelled(true);
@@ -13,7 +41,14 @@ const AccountSubscription = () => {
         document.getElementsByClassName('changePlanButton')[0].innerHTML = 'Choose Plan';
         document.getElementsByClassName('subscriptionDetails')[0].innerHTML = 'Your subscription was cancelled on <strong>05th August 2023</strong>.';
     }
-
+    if (pageLoading) {
+        return (
+            <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100vh' }}>
+                <h1 className='text-white'>Loading...</h1>
+                <span className='spinner-border text-white' style={{ width: '2rem', height: '2rem' }}></span>
+            </div>
+        )
+    }
     return (
         <div className='accSubscription'>
             <div className='d-flex'>
@@ -29,17 +64,18 @@ const AccountSubscription = () => {
             </div>
             <div className='row mt-2'>
                 <div className='col-6'>
-                    <h6 className="planName mb-0">Basic</h6>
-                    <p className='text-muted devices'>Phone + Tablet</p>
+                    <h6 className="planName mb-0">{user && user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)}</h6>
+                    <p className='text-muted devices'>{user && user.subscription_devices.split(', ').join(' + ')}</p>
                 </div>
             </div>
             <div className='row'>
-                <h3 className='currentFee'><strong>₹ 2000</strong>/yr</h3>
+                <h3 className='currentFee'><strong>₹ {user && user.subscription_fee}
+                    </strong>/{user && user.subscription_type==="yearly"?"yr":"mo"}</h3>
             </div>
             <Link to='/billing'>
-                <button className='changePlanButton mt-3'>Change Plan</button>
+                <button className='changePlanButton mt-3' onClick={handlePlanChange}>Change Plan</button>
             </Link>
-            <p className='small mt-4 subscriptionDetails'>Your subscription has started on <strong>05th August 2023</strong> and will auto renew on <strong>05th September 2023</strong>.</p>
+            <p className='small mt-4 subscriptionDetails'>Your subscription has started on <strong>{user && new Date(user.subscribed_on).toDateString().slice(4)}</strong> and will auto renew on <strong>{user && new Date(user.renewal_date).toDateString().slice(4)}</strong>.</p>
         </div>
     )
 }

@@ -17,7 +17,7 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/billing" element={<Billing />} />
           <Route path="/payment" element={<StripeWrapper />} />
-          <Route path="/account/*" element={<AccountSubscription />} />
+          <Route path="/mysubscription" element={<AccountSubscription />} />
         </Routes>
       </BrowserRouter>
     </div>

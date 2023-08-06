@@ -7,6 +7,7 @@ import time
 import requests
 import hashlib
 from datetime import timedelta
+import datetime
 import stripe
 import threading
 
@@ -20,8 +21,8 @@ mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60)
-# app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
+# app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
 CORS(app, supports_credentials=True, resources={r"/*": {"origins": "http://localhost:3000"}})
 
 @app.route('/', methods=['GET'])
@@ -42,16 +43,18 @@ def signup():
         "created_at": time.time(),
         "num_of_logins": 1,
         "subscribed": False,
-        "subscribed_at": None,
-        "subscribed_till": None,
-        "subscribed_plan": None,
+        "subscribed_on": None,
+        "renewal_date": None,
         "subscription_type": None,
-        "amount_paid": None,
+        "subscription_fee": None,
+        "subscribed_plan": None,
         "max_allowed_sessions": 1,
+        "subscription_devices": [],
         "recent_activity": [
             {
                 "activity": "Signed up",
-                "expiring_at": time.time() + 60 # 60 seconds
+                # "expiring_at": time.time() + 60 # 60 seconds
+                "expiring_at": time.time() + 600 # 10 minutes
             }
         ],
     }
@@ -61,12 +64,13 @@ def signup():
     # create user
     else:
         cluster.insert_one(data)
+        client.close()
         # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
         data.pop('_id')
         if(request.json['remember_user'] == True):
             session.permanent = True
-            app.permanent_session_lifetime = timedelta(seconds=120)
-            # app.permanent_session_lifetime = timedelta(minutes=20)
+            # app.permanent_session_lifetime = timedelta(seconds=120)
+            app.permanent_session_lifetime = timedelta(minutes=20)
         else:
             session.permanent = False
         session['user_email'] = request.json['email']
@@ -94,15 +98,19 @@ def login():
                 return jsonify({"status": "error", "message": "Maximum number of sessions reached for your account. Please logout from one of the other devices to login from this device"}), 200
             # add the current session to the recent_activity array
             if(request.json['remember_user'] == True):
-                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 120}}}) # 120 seconds
+                # cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 120}}}) # 120 seconds
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 1200}}}) # 20 minutes
             else:
-                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 60}}}) # 60 seconds
+                # cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 60}}}) # 60 seconds
+                cluster.update_one({"email": request.json['email']}, {"$push": {"recent_activity": {"activity": "Logged in", "expiring_at": time.time() + 600}}}) # 10 minutes
+            # update last login
+            cluster.update_one({"email": request.json['email']}, {"$set": {"last_login": time.time()}})
             # set session
             print(request.json['remember_user'])
             if(request.json['remember_user'] == True):
                 session.permanent = True
-                app.permanent_session_lifetime = timedelta(seconds=120)
-                # app.permanent_session_lifetime = timedelta(minutes=20)
+                # app.permanent_session_lifetime = timedelta(seconds=120)
+                app.permanent_session_lifetime = timedelta(minutes=20)
             session['user_email'] = request.json['email']
             print(session.get('user_email'))
             # update last login
@@ -130,6 +138,7 @@ def get_user():
         user = cluster.find_one({"email": session['user_email']})
         # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
         user.pop('_id')
+        client.close()
         return jsonify({"status": "success", "message": "User found and logged in", "user": user}), 200
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
@@ -159,6 +168,7 @@ def create_payment_intent():
             # Save the client_secret and id in the session as well da
             session['payment_intent_id'] = intent['id']
             session['payment_intent_client_secret'] = intent['client_secret']
+            client.close()
             return jsonify({"status": "success", "message": "Payment intent created successfully", "client_secret": intent['client_secret']}), 200
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
@@ -192,7 +202,7 @@ def check_card():
                         'cvc': cvc,
                     },
                 )
-
+                client.close()
                 # If the Payment Method is successfully created, the card details are valid
                 return jsonify({'valid': True})
             except stripe.error.CardError as e:
@@ -248,6 +258,7 @@ def create_subscription():
             expand=['latest_invoice.payment_intent']
         )
         print("subscription created", subscription)
+        client.close()
         return jsonify({'status': 'success', 'message': 'Subscription successful', 'client_secret': subscription.latest_invoice.payment_intent.client_secret}), 200
     except Exception as e:
         print("error", e)
@@ -260,12 +271,35 @@ def get_plans():
         database = client["Cluster0"]
         cluster = database["plans"]
         plans = list(cluster.find({}, {'_id': False}))
+        client.close()
         return jsonify({'status': 'success', 'message': 'Plans retrieved successfully', 'plans': plans}), 200
     except Exception as e:
         print("error", e)
         return jsonify({'status': 'error', 'message': str(e)}), 200
 
-# Run Server on port 5000
+@app.route('/update_user', methods=['POST'])
+def update_user():
+    user_email = session['user_email']
+    data = request.get_json()
+    userSessionsMap = {
+        "mobile": 1,
+        "basic": 3,
+        "standard": 5,
+        "premium": 7
+    }
+    print(data)
+    if(data['sub'] == "monthly"):
+        renewaldays = 30
+    elif(data['sub'] == "yearly"):
+        renewaldays = 365
+    client = pymongo.MongoClient(mongoConnectionString)
+    database = client["Cluster0"]
+    cluster = database["users"]
+    cluster.update_one({"email": user_email}, {"$set": {"subscribed": True, "subscribed_on": datetime.datetime.now(), "renewal_date": datetime.datetime.now() + datetime.timedelta(days=renewaldays), "subscription_type": data['sub'], "subscription_fee": data['fee'], "subscribed_plan": data['plan'], "subscription_devices": data['devices']}})
+    # Update the max_allowed_sessions for the user
+    cluster.update_one({"email": user_email}, {"$set": {"max_allowed_sessions": userSessionsMap[data['plan']]}})
+    client.close()
+    return jsonify({'status': 'success', 'message': 'User updated successfully'}), 200
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)
     print('Server running on port 5000')

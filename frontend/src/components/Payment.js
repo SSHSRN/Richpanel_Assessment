@@ -1,24 +1,36 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 const Payment = () => {
     const location = useLocation();
-    const { priceID, plan, sub, fee } = location.state;
-    console.log("priceID: ", priceID);
-    console.log("plan: ", plan);
-    console.log("sub: ", sub);
-    console.log("fee: ", fee);
+    const navigate = useNavigate();
+    const { priceID, plan, sub, fee, devices } = location.state;
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(true);
     const [error, setError] = useState('');
+    const [db, setDB] = useState(false);
     const api = axios.create({
         baseURL: 'http://localhost:5000',
         withCredentials: true
-    })
-    const checkCard = async () => {
+    });
+
+    useEffect(() => {
+        api.get('/get_user').then((res) => {
+            console.log(res.data.message);
+            if (res.data.message === 'User not found or not logged in') {
+                setPageLoading(false);
+                alert('You are not logged in. Please login to continue');
+                navigate('/login');
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
+    }, []);
+    const processPayment = async () => {
         if (window.confirm('Are you sure you want to proceed with the payment?')) {
             setLoading(true);
             try {
@@ -34,7 +46,7 @@ const Payment = () => {
                     price_id: priceID
                 });
                 if (!response.data) {
-                    setError('Payment Failed')
+                    setError('Payment Failed');
                     setLoading(false);
                     return;
                 }
@@ -45,8 +57,26 @@ const Payment = () => {
                     setLoading(false);
                     return;
                 }
-                alert("Payment successful!");
                 setLoading(false);
+                setDB(true);
+                await api.post('/update_user', {
+                    plan: plan,
+                    sub: sub,
+                    fee: fee,
+                    devices: devices
+                }).then((res) => {
+                    console.log(res.data);
+                    if (res.data.status === 'error') {
+                        alert(res.data.message);
+                        setLoading(false);
+                    }
+                    else {
+                        navigate('/mysubscription');
+                    }
+                }).catch((err) => {
+                    setError(err.message);
+                    setLoading(false);
+                })
             } catch (err) {
                 setError(err.message);
                 setLoading(false);
@@ -54,9 +84,21 @@ const Payment = () => {
         }
     }
     if (error) {
+        alert(error);
+    }
+    if (db) {
         return (
             <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100vh' }}>
-                <h1 className='text-white'>Error: {error}</h1>
+                <h1 className='text-white'>Saving data to the database</h1>
+                <span className='spinner-border text-white' style={{ width: '2rem', height: '2rem' }}></span>
+            </div>
+        )
+    }
+    if (pageLoading) {
+        return (
+            <div className='d-flex flex-column justify-content-center align-items-center' style={{ height: '100vh' }}>
+                <h1 className='text-white'>Loading...</h1>
+                <span className='spinner-border text-white' style={{ width: '2rem', height: '2rem' }}></span>
             </div>
         )
     }
@@ -68,7 +110,7 @@ const Payment = () => {
                         <h2 className='strong'>Complete Payment</h2>
                         <h6 className='mt-2'>Enter your credit or debit card details below</h6>
                         <CardElement className='paymentDetailsGroup mt-3 mb-3' />
-                        <button className='confirmPaymentButton mt-3' onClick={checkCard} disabled={!stripe || loading}>
+                        <button className='confirmPaymentButton mt-3' onClick={processPayment} disabled={!stripe || loading}>
                             {loading ? 'Processing...' : 'Confirm Payment'}
                         </button>
                     </div>
@@ -81,21 +123,21 @@ const Payment = () => {
                                 <h6 className="justify-content-start">Plan Name</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">{ plan.charAt(0).toUpperCase() + plan.slice(1) }</h6>
+                                <h6 className="justify-content-end fR">{plan.charAt(0).toUpperCase() + plan.slice(1)}</h6>
                             </div>
                             <hr />
                             <div className='col-6'>
                                 <h6 className="justify-content-start">Billing Cycle</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">{ sub.charAt(0).toUpperCase() + sub.slice(1) }</h6>
+                                <h6 className="justify-content-end fR">{sub.charAt(0).toUpperCase() + sub.slice(1)}</h6>
                             </div>
                             <hr />
                             <div className='col-6'>
                                 <h6 className="justify-content-start">Plan Price</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">₹ { fee }/{ sub==="monthly"?'mo':'yr'}</h6>
+                                <h6 className="justify-content-end fR">₹ {fee}/{sub === "monthly" ? 'mo' : 'yr'}</h6>
                             </div>
                         </div>
                     </div>
