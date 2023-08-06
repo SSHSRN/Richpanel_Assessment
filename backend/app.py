@@ -67,12 +67,9 @@ def signup():
         client.close()
         # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
         data.pop('_id')
+        session.permanent = True
         if(request.json['remember_user'] == True):
-            session.permanent = True
-            # app.permanent_session_lifetime = timedelta(seconds=120)
             app.permanent_session_lifetime = timedelta(minutes=20)
-        else:
-            session.permanent = False
         session['user_email'] = request.json['email']
         return jsonify({"status": "success", "message": "User created successfully", "user": data}), 200
 
@@ -107,8 +104,8 @@ def login():
             cluster.update_one({"email": request.json['email']}, {"$set": {"last_login": time.time()}})
             # set session
             print(request.json['remember_user'])
+            session.permanent = True
             if(request.json['remember_user'] == True):
-                session.permanent = True
                 # app.permanent_session_lifetime = timedelta(seconds=120)
                 app.permanent_session_lifetime = timedelta(minutes=20)
             session['user_email'] = request.json['email']
