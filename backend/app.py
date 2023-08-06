@@ -264,6 +264,28 @@ def create_subscription():
         print("error", e)
         return jsonify({'status': 'error', 'message': str(e)}), 200
 
+@app.route('/delete_subscription', methods=['POST'])
+def delete_subscriptions():
+    try:
+        prod_ID = request.get_json()['price_id']
+        email = session['user_email']
+        client = pymongo.MongoClient(mongoConnectionString)
+        database = client["Cluster0"]
+        cluster = database["users"]
+
+        customers = stripe.Customer.list(email=email)
+        customer_id = customers.data[0].id
+        subscriptions = stripe.Subscription.list(customer=customer_id)
+        for subscription in subscriptions.data:
+            print(subscription.plan.id)
+            if(subscription.plan.id == prod_ID):
+                stripe.Subscription.delete(subscription.id)
+                cluster.update_one({"email": email}, {"$set": {"subscribed": False, "subscribed_on": None, "renewal_date": None, "subscription_type": None, "subscription_fee": None, "subscribed_plan": None, "max_allowed_sessions": 1, "subscription_devices": [] }})
+            return jsonify({'status': 'success', 'message': 'Subscription deleted successfully', 'deleted_on': datetime.datetime.now()}), 200
+    except Exception as e:
+        print("error", e)
+        return jsonify({'status': 'error', 'message': str(e)}), 200
+
 @app.route('/get_plans', methods=['GET'])
 def get_plans():
     try:
@@ -295,7 +317,7 @@ def update_user():
     client = pymongo.MongoClient(mongoConnectionString)
     database = client["Cluster0"]
     cluster = database["users"]
-    cluster.update_one({"email": user_email}, {"$set": {"subscribed": True, "subscribed_on": datetime.datetime.now(), "renewal_date": datetime.datetime.now() + datetime.timedelta(days=renewaldays), "subscription_type": data['sub'], "subscription_fee": data['fee'], "subscribed_plan": data['plan'], "subscription_devices": data['devices']}})
+    cluster.update_one({"email": user_email}, {"$set": {"subscribed": True, "subscribed_on": datetime.datetime.now(), "renewal_date": datetime.datetime.now() + datetime.timedelta(days=renewaldays), "subscription_type": data['sub'], "subscription_fee": data['fee'], "subscribed_plan": data['plan'], "subscription_devices": data['devices'], "price_id": data['priceID']}})
     # Update the max_allowed_sessions for the user
     cluster.update_one({"email": user_email}, {"$set": {"max_allowed_sessions": userSessionsMap[data['plan']]}})
     client.close()

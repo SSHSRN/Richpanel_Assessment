@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'
@@ -17,6 +17,11 @@ const AccountSubscription = () => {
         api.get('/get_user').then((res) => {
             console.log(res.data.message);
             console.log(res.data);
+            if (!res.data.user.subscribed) {
+                setPageLoading(false);
+                alert('You are not subscribed to any plan. Please subscribe to a plan to continue');
+                navigate('/billing');
+            }
             if (res.data.message === 'User not found or not logged in') {
                 setPageLoading(false);
                 alert('You are not logged in. Please login to continue');
@@ -29,17 +34,37 @@ const AccountSubscription = () => {
         });
     }, []);
 
-    const handlePlanChange = () => {
+    const handlePlanChange = async () => {
+        if (window.confirm('Are you sure you want to delete this subscription and subscribe to a new plan?')) {
+            await api.post('/delete_subscription', {
+                price_id: user.price_id
+            }
+            ).then((res) => {
+                navigate('/billing');
+            }).catch((err) => {
+                console.log(err);
+            });
+        }
     }
 
-    const handleCancel = () => {
-        setPlanCancelled(true);
-        document.getElementsByClassName('planActive')[0].innerHTML = 'Cancelled';
-        document.getElementsByClassName('planActive')[0].classList.add('planCancelled');
-        document.getElementsByClassName('planCancelled')[0].classList.remove('planActive');
-        document.getElementsByClassName('cancelPlanButton')[0].classList.add('d-none');
-        document.getElementsByClassName('changePlanButton')[0].innerHTML = 'Choose Plan';
-        document.getElementsByClassName('subscriptionDetails')[0].innerHTML = 'Your subscription was cancelled on <strong>05th August 2023</strong>.';
+    const handleCancel = async () => {
+        if (window.confirm('Are you sure you want to delete this subscription?')) {
+            await api.post('/delete_subscription', {
+                price_id: user.price_id
+            }
+            ).then((res) => {
+                console.log(res.data);
+                setPlanCancelled(true);
+                document.getElementsByClassName('planActive')[0].innerHTML = 'Cancelled';
+                document.getElementsByClassName('planActive')[0].classList.add('planCancelled');
+                document.getElementsByClassName('planCancelled')[0].classList.remove('planActive');
+                document.getElementsByClassName('cancelPlanButton')[0].classList.add('d-none');
+                document.getElementsByClassName('changePlanButton')[0].innerHTML = 'Choose Plan';
+                document.getElementsByClassName('subscriptionDetails')[0].innerHTML = `Your subscription was cancelled on <strong>${new Date(res.data.deleted_on).toDateString().slice(4)}</strong>.`;
+            }).catch((err) => {
+                console.log(err);
+            });
+        }
     }
     if (pageLoading) {
         return (
@@ -64,13 +89,13 @@ const AccountSubscription = () => {
             </div>
             <div className='row mt-2'>
                 <div className='col-6'>
-                    <h6 className="planName mb-0">{user && user.subscription_plan.charAt(0).toUpperCase() + user.subscription_plan.slice(1)}</h6>
+                    <h6 className="planName mb-0">{user && user.subscribed_plan.charAt(0).toUpperCase() + user.subscribed_plan.slice(1)}</h6>
                     <p className='text-muted devices'>{user && user.subscription_devices.split(', ').join(' + ')}</p>
                 </div>
             </div>
             <div className='row'>
                 <h3 className='currentFee'><strong>₹ {user && user.subscription_fee}
-                    </strong>/{user && user.subscription_type==="yearly"?"yr":"mo"}</h3>
+                </strong>/{user && user.subscription_type === "yearly" ? "yr" : "mo"}</h3>
             </div>
             <Link to='/billing'>
                 <button className='changePlanButton mt-3' onClick={handlePlanChange}>Change Plan</button>

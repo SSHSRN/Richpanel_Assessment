@@ -26,6 +26,7 @@ const Payment = () => {
                 alert('You are not logged in. Please login to continue');
                 navigate('/login');
             }
+            setPageLoading(false);
         }).catch((err) => {
             console.log(err);
         });
@@ -63,7 +64,8 @@ const Payment = () => {
                     plan: plan,
                     sub: sub,
                     fee: fee,
-                    devices: devices
+                    devices: devices,
+                    priceID: priceID
                 }).then((res) => {
                     console.log(res.data);
                     if (res.data.status === 'error') {
