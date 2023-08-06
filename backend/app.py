@@ -23,7 +23,7 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 # app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
-CORS(app, supports_credentials=True, resources={r"/*": {"origins": "https://richpanel-assessment-frontend-hixnctymba-uc.a.run.app/" }})
+CORS(app, supports_credentials=True, resources={r"/*": {"origins": "*" }})
 
 @app.route('/', methods=['GET'])
 def hello():
