@@ -35,42 +35,35 @@ const Billing = () => {
     }, []);
     const [selectedPlan, setSelectedPlan] = useState('mobile');
     const [selectedSub, setSelectedSub] = useState('monthly');
+    const [term, setTerm] = useState('monthlySubscription');
+    const [selectedPlanIndex, setSelectedPlanIndex] = useState(0);
 
-    const priceDetails = {
-        monthly: {
-            mobile: 100,
-            basic: 200,
-            standard: 500,
-            premium: 700
-        },
-        yearly: {
-            mobile: 1000,
-            basic: 2000,
-            standard: 5000,
-            premium: 7000
-        }
-    }
+    const indexMap = {
+        "mobile": 0,
+        "basic": 1,
+        "standard": 2,
+        "premium": 3
+    };
 
     const handleSelectPlan = (planType) => {
         setSelectedPlan(planType);
+        setSelectedPlanIndex(indexMap[planType]);
     };
 
     const handleSelectSub = (subType) => {
         setSelectedSub(subType);
+        if (subType === 'monthly') {
+            setTerm('monthlySubscription');
+        }
+        else {
+            setTerm('annualSubscription');
+        }
     };
 
     const proceedToPayment = () => {
-        console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", priceDetails[selectedSub][selectedPlan]);
-        api.post('/create_payment_intent', {
-            amount: priceDetails[selectedSub][selectedPlan]
-        }).then(async (res) => {
-            console.log(res.data);
-            if (res.data.message === 'Payment intent created successfully') {
-                navigate('/payment', { state: { client_secret: res.data.client_secret } });
-            }
-        }).catch((err) => {
-            console.log(err);
-        });
+        console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", data[selectedPlanIndex][term]);
+        const priceID = selectedSub === 'monthly' ? data[selectedPlanIndex].monthlyPriceID : data[selectedPlanIndex].yearlyPriceID;
+        navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term] } });
     };
 
     if (loading) {
@@ -136,22 +129,22 @@ const Billing = () => {
                     </div>
                     <div className='col-2 offset-md-1'>
                         <div className='col-10'>
-                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>₹ {priceDetails[selectedSub].mobile}</h6>) || <h6 className='text-center mb-0'>₹ {priceDetails[selectedSub].mobile}</h6>}
+                            {(selectedPlan === 'mobile' && <h6 className='text-center mb-0 strong'>₹ {data[0][term]}</h6>) || <h6 className='text-center mb-0'>₹ {data[0][term]}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>₹ {priceDetails[selectedSub].basic}</h6>) || <h6 className='text-center mb-0'>₹ {priceDetails[selectedSub].basic}</h6>}
+                            {(selectedPlan === 'basic' && <h6 className='text-center mb-0 strong'>₹ {data[1][term]}</h6>) || <h6 className='text-center mb-0'>₹ {data[1][term]}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>₹ {priceDetails[selectedSub].standard}</h6>) || <h6 className='text-center mb-0'>₹ {priceDetails[selectedSub].standard}</h6>}
+                            {(selectedPlan === 'standard' && <h6 className='text-center mb-0 strong'>₹ {data[2][term]}</h6>) || <h6 className='text-center mb-0'>₹ {data[2][term]}</h6>}
                         </div>
                     </div>
                     <div className='col-2'>
                         <div className='col-10'>
-                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>₹ {priceDetails[selectedSub].premium}</h6>) || <h6 className='text-center mb-0'>₹ {priceDetails[selectedSub].premium}</h6>}
+                            {(selectedPlan === 'premium' && <h6 className='text-center mb-0 strong'>₹ {data[3][term]}</h6>) || <h6 className='text-center mb-0'>₹ {data[3][term]}</h6>}
                         </div>
                     </div>
                 </div>

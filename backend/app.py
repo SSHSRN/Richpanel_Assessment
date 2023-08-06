@@ -134,6 +134,7 @@ def get_user():
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
 
+# Not used
 @app.route('/create_payment_intent', methods=['POST'])
 def create_payment_intent():
     client = pymongo.MongoClient(mongoConnectionString)
@@ -162,6 +163,7 @@ def create_payment_intent():
     else:
         return jsonify({"status": "error", "message": "User not found or not logged in"}), 200
 
+# Not used
 @app.route('/check_card', methods=['POST'])
 def check_card():
     client = pymongo.MongoClient(mongoConnectionString)
@@ -237,7 +239,7 @@ def create_subscription():
         subscription = stripe.Subscription.create(
             customer=customer_id,
             items=[{
-                "price": "price_1NbkwSSCT3zDBivM0Q4DXeF6",
+                "price": request.json['price_id'],
             }],
             payment_settings={
                 'payment_method_types': ['card'],

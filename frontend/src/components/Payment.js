@@ -5,7 +5,11 @@ import { useLocation } from 'react-router-dom';
 
 const Payment = () => {
     const location = useLocation();
-    const { client_secret } = location.state;
+    const { priceID, plan, sub, fee } = location.state;
+    console.log("priceID: ", priceID);
+    console.log("plan: ", plan);
+    console.log("sub: ", sub);
+    console.log("fee: ", fee);
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
@@ -15,7 +19,7 @@ const Payment = () => {
         withCredentials: true
     })
     const checkCard = async () => {
-        if (window.confirm('Are you sure you want to pay?')) {
+        if (window.confirm('Are you sure you want to proceed with the payment?')) {
             setLoading(true);
             try {
                 const paymentMethod = await stripe.createPaymentMethod({
@@ -27,6 +31,7 @@ const Payment = () => {
 
                 const response = await api.post('/create_subscription', {
                     payment_method: paymentMethod ? paymentMethod.paymentMethod.id : null,
+                    price_id: priceID
                 });
                 if (!response.data) {
                     setError('Payment Failed')
@@ -35,8 +40,13 @@ const Payment = () => {
                 }
                 console.log("data:", response.data);
                 const confirm = await stripe.confirmCardPayment(response.data.client_secret); console.log("confirm:", confirm);
-                if (confirm.error) return alert("Payment unsuccessful!");
+                if (confirm.error) {
+                    setError(confirm.error.message);
+                    setLoading(false);
+                    return;
+                }
                 alert("Payment successful!");
+                setLoading(false);
             } catch (err) {
                 setError(err.message);
                 setLoading(false);
@@ -71,21 +81,21 @@ const Payment = () => {
                                 <h6 className="justify-content-start">Plan Name</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">Basic</h6>
+                                <h6 className="justify-content-end fR">{ plan.charAt(0).toUpperCase() + plan.slice(1) }</h6>
                             </div>
                             <hr />
                             <div className='col-6'>
                                 <h6 className="justify-content-start">Billing Cycle</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">Monthly</h6>
+                                <h6 className="justify-content-end fR">{ sub.charAt(0).toUpperCase() + sub.slice(1) }</h6>
                             </div>
                             <hr />
                             <div className='col-6'>
                                 <h6 className="justify-content-start">Plan Price</h6>
                             </div>
                             <div className='col-6'>
-                                <h6 className="justify-content-end fR">₹ 200/mo</h6>
+                                <h6 className="justify-content-end fR">₹ { fee }/{ sub==="monthly"?'mo':'yr'}</h6>
                             </div>
                         </div>
                     </div>
