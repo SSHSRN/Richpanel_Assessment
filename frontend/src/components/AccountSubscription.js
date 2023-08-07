@@ -7,6 +7,7 @@ const AccountSubscription = () => {
     const [planCancelled, setPlanCancelled] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
     const [loggedIn, setLoggedIn] = useState(true);
+    const [subscribed, setSubscribed] = useState(true);
     const [user, setUser] = useState({});
     const navigate = useNavigate();
 
@@ -22,8 +23,7 @@ const AccountSubscription = () => {
             if (!res.data.user.subscribed) {
                 setPageLoading(false);
                 alert('You are not subscribed to any plan. Please subscribe to a plan to continue');
-                navigate('/billing');
-                return;
+                setSubscribed(false);
             }
             setUser(res.data.user);
             setPageLoading(false);
@@ -74,6 +74,10 @@ const AccountSubscription = () => {
     }
     if (!loggedIn) {
         navigate('/login');
+        return;
+    }
+    if (!subscribed) {
+        navigate('/billing');
         return;
     }
     return (
