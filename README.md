@@ -10,6 +10,7 @@ This is a web application built for the Richpanel assessment. Users can create a
 
 ```
 git clone https://github.com/SSHSRN/Richpanel_Assessment
+cd Richpanel_Assessment
 ```
 
 - Create a virtual environment
