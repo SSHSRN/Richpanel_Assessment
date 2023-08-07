@@ -20,6 +20,7 @@ mongoConnectionString = os.getenv("MONGODB_CONNECTION_URL")
 # print(mongoConnectionString)
 
 app = Flask(__name__)
+app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
 app.config['SECRET_KEY'] = 'your_secret_key_here'
 # app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(seconds=60)
 app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(minutes=10)
