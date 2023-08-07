@@ -50,7 +50,7 @@ def signup():
         "subscribed_plan": None,
         "max_allowed_sessions": 1,
         "subscription_devices": [],
-        "recent_activity": [{}],
+        "recent_activity": [],
     }
     # check if user already exists
     if cluster.find_one({"email": request.json['email']}):
