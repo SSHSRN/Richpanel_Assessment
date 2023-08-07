@@ -23,6 +23,7 @@ const AccountSubscription = () => {
                 setPageLoading(false);
                 alert('You are not subscribed to any plan. Please subscribe to a plan to continue');
                 navigate('/billing');
+                return;
             }
             setUser(res.data.user);
             setPageLoading(false);
@@ -41,9 +42,6 @@ const AccountSubscription = () => {
             }).catch((err) => {
                 console.log(err);
             });
-        }
-        else {
-            return;
         }
     }
 

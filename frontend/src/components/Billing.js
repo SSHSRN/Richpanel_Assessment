@@ -66,8 +66,10 @@ const Billing = () => {
             amount: data[selectedPlanIndex][term],
         }).then((res) => {
             if (res.data.message === 'Payment intent created successfully') {
+                console.log(res.data);
                 navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term], devices: devices } });
             }
+            console.log(res.data);
         }).catch((err) => {
             console.log(err);
         });
