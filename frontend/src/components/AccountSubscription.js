@@ -42,6 +42,9 @@ const AccountSubscription = () => {
                 console.log(err);
             });
         }
+        else {
+            return;
+        }
     }
 
     const handleCancel = async () => {
