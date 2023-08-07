@@ -10,6 +10,7 @@ const Payment = () => {
     const stripe = useStripe();
     const elements = useElements();
     const [loading, setLoading] = useState(false);
+    const [loggedIn, setLoggedIn] = useState(true);
     const [pageLoading, setPageLoading] = useState(true);
     const [error, setError] = useState('');
     const [db, setDB] = useState(false);
@@ -20,7 +21,7 @@ const Payment = () => {
             if (res.data.message === 'User not found or not logged in') {
                 setPageLoading(false);
                 alert('You are not logged in. Please login to continue');
-                navigate('/login');
+                setLoggedIn(false);
             }
             setPageLoading(false);
         }).catch((err) => {
@@ -99,6 +100,10 @@ const Payment = () => {
                 <span className='spinner-border text-white' style={{ width: '2rem', height: '2rem' }}></span>
             </div>
         )
+    }
+    if (!loggedIn) {
+        navigate('/login');
+        return;
     }
     return (
         <div className='paymentPage col-md-7 col-sm-8 col-10'>

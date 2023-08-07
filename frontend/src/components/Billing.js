@@ -7,15 +7,16 @@ const Billing = () => {
     const navigate = useNavigate();
 
     const [loading, setLoading] = useState(true);
+    const [loggedIn, setLoggedIn] = useState(true);
 
     useEffect(() => {
         console.log('Billing page loaded');
         api.get('/get_user').then((res) => {
             console.log(res.data.message);
             if (res.data.message === 'User not found or not logged in') {
+                alert('You are not logged in. Please login to continue')
                 setLoading(false);
-                alert('You are not logged in. Please login to continue');
-                navigate('/login');
+                setLoggedIn(false);
             }
         }).catch((err) => {
             console.log(err);
@@ -56,11 +57,20 @@ const Billing = () => {
         }
     };
 
-    const proceedToPayment = () => {
+    const proceedToPayment = async() => {
         console.log(selectedPlan, "plan,", selectedSub, "subscription,", selectedSub, "fee:", data[selectedPlanIndex][term]);
         const priceID = selectedSub === 'monthly' ? data[selectedPlanIndex].monthlyPriceID : data[selectedPlanIndex].yearlyPriceID;
         const devices = data[selectedPlanIndex].Device;
-        navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term], devices: devices } });
+        // creaete a payment intent
+        await api.post('/create_payment_intent', {
+            amount: data[selectedPlanIndex][term],
+        }).then((res) => {
+            if (res.data.message === 'Payment intent created successfully') {
+                navigate('/payment', { state: { priceID: priceID, plan: selectedPlan, sub: selectedSub, fee: data[selectedPlanIndex][term], devices: devices } });
+            }
+        }).catch((err) => {
+            console.log(err);
+        });
     };
 
     if (loading) {
@@ -70,6 +80,11 @@ const Billing = () => {
                 <span className='spinner-border spinner-border-lg text-white'></span>
             </div>
         )
+    }
+
+    if (!loggedIn) {
+        navigate('/login');
+        return;
     }
 
     return (
