@@ -14,15 +14,15 @@ const AccountSubscription = () => {
         api.get('/get_user').then((res) => {
             console.log(res.data.message);
             console.log(res.data);
-            if (!res.data.user.subscribed) {
-                setPageLoading(false);
-                alert('You are not subscribed to any plan. Please subscribe to a plan to continue');
-                navigate('/billing');
-            }
             if (res.data.message === 'User not found or not logged in') {
                 setPageLoading(false);
                 alert('You are not logged in. Please login to continue');
                 setLoggedIn(false);
+            }
+            if (!res.data.user.subscribed) {
+                setPageLoading(false);
+                alert('You are not subscribed to any plan. Please subscribe to a plan to continue');
+                navigate('/billing');
             }
             setUser(res.data.user);
             setPageLoading(false);
