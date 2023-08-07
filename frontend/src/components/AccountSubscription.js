@@ -15,8 +15,8 @@ const AccountSubscription = () => {
             console.log(res.data.message);
             console.log(res.data);
             if (res.data.message === 'User not found or not logged in') {
-                setPageLoading(false);
                 alert('You are not logged in. Please login to continue');
+                setPageLoading(false);
                 setLoggedIn(false);
             }
             if (!res.data.user.subscribed) {
