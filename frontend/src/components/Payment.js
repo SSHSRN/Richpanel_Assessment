@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import axios from 'axios'
+import api from './api';
 import { CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
 import { useLocation, useNavigate } from 'react-router-dom';
 
@@ -13,10 +13,6 @@ const Payment = () => {
     const [pageLoading, setPageLoading] = useState(true);
     const [error, setError] = useState('');
     const [db, setDB] = useState(false);
-    const api = axios.create({
-        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
-        withCredentials: true
-    });
 
     useEffect(() => {
         api.get('/get_user').then((res) => {

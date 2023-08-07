@@ -1,15 +1,11 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import axios from 'axios'
+import api from './api';
 import { useNavigate } from 'react-router-dom'
 
 const Signup = () => {
     const [loading, setLoading] = useState(false)
 
-    const api = axios.create({
-        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
-        withCredentials: true
-    })
     const navigate = useNavigate()
     const handleSignup = async (e) => {
         setLoading(true)

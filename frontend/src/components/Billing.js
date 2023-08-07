@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from './api';
 import { useNavigate } from 'react-router-dom';
 
 const Billing = () => {
     const [data, setData] = useState({});
     const navigate = useNavigate();
-    const api = axios.create({
-        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
-        withCredentials: true
-    });
 
     const [loading, setLoading] = useState(true);
 

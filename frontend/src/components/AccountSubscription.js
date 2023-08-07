@@ -1,16 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios'
+import api from './api';
 
 const AccountSubscription = () => {
     const [planCancelled, setPlanCancelled] = useState(false);
     const [pageLoading, setPageLoading] = useState(true);
     const [user, setUser] = useState({});
-    const api = axios.create({
-        baseURL: 'https://richpanel-assessment-backend-hixnctymba-uc.a.run.app/',
-        withCredentials: true
-    });
     const navigate = useNavigate();
 
     useEffect(() => {

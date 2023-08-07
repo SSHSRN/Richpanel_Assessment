@@ -61,10 +61,6 @@ def signup():
         client.close()
         # Remove _id from response which is inserted by MongoDB and is not JSON serializable (cannot be converted to JSON)
         data.pop('_id')
-        session.permanent = True
-        if(request.json['remember_user'] == True):
-            app.permanent_session_lifetime = timedelta(minutes=20)
-        session['user_email'] = request.json['email']
         return jsonify({"status": "success", "message": "User created successfully", "user": data}), 200
 
 @app.route('/login', methods=['POST'])
